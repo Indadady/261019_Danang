@@ -1633,7 +1633,7 @@
         };
         const mapHints = {
             all: '✈️ 전체 보기: 대한항공 직항 노선 (KE459 · KE460)',
-            day1: '📍 1일차: 인천 → 다낭 공항 → 호텔',
+            day1: '📍 1일차: 인천 → 다낭 공항 도착 후 확대하여 호텔 이동',
             day2: '📍 2일차: 호텔 → 바나산 → 한강유람선 → 호텔',
             day3: '📍 3일차: 호텔 → 바구니배 → 호이안 구시가지 → 귀환',
             day4: '📍 4일차: 미케비치 → 박물관 → 사랑의 부두 → 3D미술관 → 영응사 → 공항 → 인천',
@@ -1818,6 +1818,34 @@
             });
         }
 
+        function localSpotKeys(route){
+            return (route.zoom || route.p).filter(k => k !== 'icn');
+        }
+        function boundsOf(keys, extraPts){
+            const b = L.latLngBounds();
+            (keys || []).forEach(k => { if(spots[k]) b.extend(spots[k].c); });
+            (extraPts || []).forEach(pt => b.extend(pt));
+            return b;
+        }
+        function waitSeq(ms, seq){
+            return new Promise(resolve => setTimeout(() => resolve(seq === mapDrawSeq), ms));
+        }
+        function flyMap(b, maxZoom, seq){
+            return new Promise(resolve => {
+                if(seq !== mapDrawSeq || !b || !b.isValid()){ resolve(); return; }
+                let done = false;
+                const finish = () => {
+                    if(done) return;
+                    done = true;
+                    map.off('moveend', finish);
+                    resolve();
+                };
+                map.once('moveend', finish);
+                map.flyToBounds(b, { padding: [48, 48], maxZoom: maxZoom, duration: 1.15 });
+                setTimeout(finish, 1400);
+            });
+        }
+
         function initMap() {
             if(map || typeof L === 'undefined') return;
             map = L.map('map', { scrollWheelZoom: false });
@@ -1848,24 +1876,48 @@
             const route = routes[dayId] || routes.all;
             const hintEl = document.getElementById('map-hint');
             if (hintEl) hintEl.innerText = mapHints[dayId] || mapHints.all;
-            let bounds = L.latLngBounds();
-            (route.zoom || route.p).forEach(key => { if(spots[key]) bounds.extend(spots[key].c); });
-            map.fitBounds(bounds, { padding: [40, 40], maxZoom: route.maxZoom || 12 });
+            const localZoom = route.maxZoom || 12;
+            const firstSeg = route.segs[0];
+            if(firstSeg && firstSeg.mode === 'flight'){
+                const fa = spots[firstSeg.from], fb = spots[firstSeg.to];
+                map.fitBounds(L.latLngBounds([fa.c, fb.c]), { padding: [48, 48], maxZoom: 5, animate: false });
+            } else {
+                map.fitBounds(boundsOf(localSpotKeys(route)), { padding: [48, 48], maxZoom: localZoom, animate: false });
+            }
             setTimeout(() => map.invalidateSize(), 300);
             const first = route.p[0];
             if(first) pinSpot(first);
-            for(const seg of route.segs){
+            for(let i = 0; i < route.segs.length; i++){
                 if(seq !== mapDrawSeq) return;
+                const seg = route.segs[i];
+                const next = route.segs[i + 1];
                 const a = spots[seg.from], b = spots[seg.to];
                 if(!a || !b) continue;
                 setMapLeg(a.t, b.t);
                 const path = seg.mode === 'flight' ? densifyLine(a.c, b.c, 72) : await roadPath(a.c, b.c);
                 if(seq !== mapDrawSeq) return;
-                path.forEach(pt => bounds.extend(pt));
-                map.fitBounds(bounds, { padding: [40, 40], maxZoom: route.maxZoom || 12 });
+                if(seg.mode === 'flight'){
+                    map.fitBounds(L.latLngBounds([a.c, b.c]), { padding: [48, 48], maxZoom: 5, animate: false });
+                } else {
+                    map.fitBounds(boundsOf(localSpotKeys(route), path), { padding: [48, 48], maxZoom: localZoom, animate: false });
+                }
                 await animatePath(path, seg.c, seg.mode==='flight' ? '10,8' : null, seg.mode, segMs(seg.mode, dayId), seq);
                 if(seq !== mapDrawSeq) return;
                 pinSpot(seg.to);
+                if(seg.mode === 'flight' && next && next.mode !== 'flight'){
+                    const ok = await waitSeq(280, seq);
+                    if(!ok) return;
+                    await flyMap(boundsOf(localSpotKeys(route)), localZoom, seq);
+                    if(seq !== mapDrawSeq) return;
+                    await waitSeq(220, seq);
+                } else if(seg.mode !== 'flight' && next && next.mode === 'flight'){
+                    const ok = await waitSeq(280, seq);
+                    if(!ok) return;
+                    const na = spots[next.from], nb = spots[next.to];
+                    await flyMap(L.latLngBounds([na.c, nb.c]), 5, seq);
+                    if(seq !== mapDrawSeq) return;
+                    await waitSeq(220, seq);
+                }
             }
             const leg = document.getElementById('map-leg');
             if(leg && seq === mapDrawSeq) leg.style.display = 'none';
