@@ -76,16 +76,46 @@
             background-color: var(--tw-bg-color);
         }
 
-        /* 🖨️ 공무원/학교 결재 서류용 인쇄 최적화 */
+        /* 🖨️ A4 2페이지: 1p 일정표 / 2p 준비물·QR */
         @media print {
-            @page { size: A4; margin: 15mm; }
+            @page { size: A4 portrait; margin: 12mm 14mm; }
             body { background-color: white !important; }
             a[href]:after { content: none !important; }
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             table tr { page-break-inside: avoid; break-inside: avoid; }
-            #print-area td { line-height: 1.6; }
+            #print-area td { line-height: 1.45; font-size: 10.5px; }
+            #print-area th { font-size: 11px; }
+            #print-area table { table-layout: fixed; }
+            #print-area th:nth-child(1), #print-area td:nth-child(1) { width: 11%; }
+            #print-area th:nth-child(2), #print-area td:nth-child(2) { width: 75%; }
+            #print-area th:nth-child(3), #print-area td:nth-child(3) { width: 14%; }
+            #print-area td, #print-area th { padding: 6px 8px !important; }
             .print-hidden { display: none !important; }
             #event-day-bar { display: none !important; }
+
+            .print-page-2 { page-break-before: always; break-before: page; }
+            .print-header-top { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0f766e; padding-bottom: 6px; margin-bottom: 10px; }
+            .print-header-top img { height: 26px; }
+            .print-doc-no { font-size: 9px; color: #555; font-weight: bold; }
+            .print-title { text-align: center; font-size: 18px; font-weight: 900; color: #0f766e; margin-bottom: 4px; line-height: 1.4; letter-spacing: -0.03em; font-family: 'Nanum Myeongjo', serif; }
+            .print-subtitle { text-align: center; font-size: 10px; color: #475569; margin: 0 0 10px 0; font-weight: 500; }
+            .print-overview { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 4px; padding: 8px 12px; margin-bottom: 10px; font-size: 10.5px; }
+            .print-overview .label { font-weight: 800; color: #0f766e; margin-right: 4px; }
+            .print-contacts { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; padding: 8px 10px; background: #f8fafc !important; border: 1px solid #cbd5e1 !important; border-radius: 4px; font-size: 10px; margin-top: 10px; margin-bottom: 6px; }
+            .print-contacts .pc-role { font-weight: 700; color: #0f766e; margin-right: 4px; }
+            .print-credit { margin-top: 8px; padding-top: 6px; border-top: 1px solid #cbd5e1; text-align: center; }
+            .print-credit-text { font-size: 9px; color: #475569; font-weight: 500; }
+            .print-checklist { border: 1.5px solid #1e293b; border-radius: 6px; padding: 12px 14px; background: #fff !important; margin-bottom: 10px; }
+            .print-checklist h2 { font-size: 13px; font-weight: 800; color: #0f766e; margin: 0 0 8px 0; }
+            .print-checklist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; font-size: 10.5px; font-weight: 600; }
+            .print-check-item { display: flex; align-items: flex-start; gap: 7px; line-height: 1.35; }
+            .print-check-box { width: 12px; height: 12px; border: 1.5px solid #0f766e; border-radius: 2px; flex-shrink: 0; margin-top: 1.5px; }
+            .print-note-list { font-size: 10.5px; color: #475569; line-height: 1.5; margin: 0 0 10px 0; padding-left: 16px; }
+            .print-qr-box { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border: 1.5px solid #1e293b; border-radius: 6px; background: #f8fafc !important; margin-bottom: 10px; }
+            .print-qr-box img { width: 110px; height: 110px; border: 1px solid #1e293b; background: #fff; flex-shrink: 0; }
+            .print-qr-box .qr-copy { font-size: 11.5px; line-height: 1.45; font-weight: 600; }
+            .print-qr-box .qr-copy strong { color: #0f766e; font-size: 13px; display: block; margin-bottom: 4px; }
+            .print-qr-box .qr-url { color: #475569; font-size: 10px; word-break: break-all; font-weight: 500; }
         }
     </style>
 </head>
@@ -1071,23 +1101,20 @@
     <!-- 🖨️ Print-Only Area (공무원/학교 제출 서류 양식) -->
     <!-- ========================================================================= -->
     <div id="print-area" class="hidden print:block w-full bg-white text-black py-4">
-        
-        <!-- Print Header -->
-        <h1 class="text-2xl font-black text-center mb-6 pb-4 border-b-2 border-slate-800" style="font-family: 'Nanum Myeongjo', serif;">
-            남평초등학교 다낭/호이안 3박 5일 해외문화탐방 일정표
-        </h1>
-        
-        <div class="flex justify-between items-end mb-4 font-bold text-sm">
-            <div class="text-slate-800">
-                <p>일 정 : 2026.10.19(월) ~ 10.23(금) [3박 5일]</p>
-                <p class="mt-1">인 원 : 학생 10명 + 인솔교사 4명 (총 14명)</p>
-                <p class="mt-1">항 공 : 대한항공 (인천국제공항 제2여객터미널 출도착)</p>
-                <p class="mt-1">숙 박 : 무엉탄럭셔리 (☎ 023-6395-6789)</p>
-            </div>
-            <div class="text-right text-slate-800">
-                <p>행사 주관: 투어메이커</p>
-                <p class="mt-1">비상연락: 이재명 대표 (010-9443-7881)</p>
-            </div>
+        <div class="print-page">
+        <div class="print-header-top">
+            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHfgIX70O5k6Anuo0UgALIdaG9jSga9auHu3uyz0uEirylGPAJnjN_qQbvEGMUvPqUQf_g9FMNUHRxlDcUBf4vZ3Mpy4TnA9WxbmzWYK11gt2zuy_Irl4wctNFjcjLyPo0GPXV792o_J7L9guRMuDfeC1gy7USwywjYbECZgzcsHybuGRRAXAnO1eNmP8/s320/logo.png" alt="Tourmaker">
+            <div class="print-doc-no">문서번호: TM-261019-DANANG · 1/2</div>
+        </div>
+        <h1 class="print-title">남평초등학교 다낭/호이안 3박 5일 해외문화탐방 일정표</h1>
+        <p class="print-subtitle">※ 상기 일정은 항공 및 현지 사정에 따라 변경될 수 있습니다.</p>
+
+        <div class="print-overview">
+            <div><span class="label">단체</span> 남평초등학교</div>
+            <div><span class="label">일정</span> 2026.10.19(월) ~ 10.23(금)</div>
+            <div><span class="label">인원</span> 14명 (학생 10 + 인솔교사 4)</div>
+            <div><span class="label">항공</span> 대한항공 KE459 / KE460 · ICN T2</div>
+            <div><span class="label">호텔</span> 무엉탄럭셔리 ☎ 023-6395-6789</div>
         </div>
 
         <!-- Print Table -->
@@ -1184,14 +1211,79 @@
                 </tr>
             </tbody>
         </table>
-        
-        <div class="mt-4 text-xs text-right text-slate-600">
-        ※ 상기 일정은 항공 및 현지 사정에 따라 변경될 수 있습니다.
+
+        <div class="print-contacts">
+            <span><span class="pc-role">담당</span> 이재명 010-9443-7881</span>
+            <span><span class="pc-role">현장</span> 조혁 010-4249-4026</span>
+            <span><span class="pc-role">현지가이드</span> 가이드 미정</span>
+            <span><span class="pc-role">주다낭총영사관</span> +84-23-6356-6100</span>
+            <span><span class="pc-role">영사긴급</span> +84-93-112-0404</span>
         </div>
-        
-        <!-- 투어메이커 우측 하단 로고 (인쇄용) -->
-        <div class="mt-12 flex justify-end">
-            <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHfgIX70O5k6Anuo0UgALIdaG9jSga9auHu3uyz0uEirylGPAJnjN_qQbvEGMUvPqUQf_g9FMNUHRxlDcUBf4vZ3Mpy4TnA9WxbmzWYK11gt2zuy_Irl4wctNFjcjLyPo0GPXV792o_J7L9guRMuDfeC1gy7USwywjYbECZgzcsHybuGRRAXAnO1eNmP8/s320/logo.png" alt="Tourmaker" class="h-8 md:h-10 object-contain opacity-90">
+        <div class="print-credit">
+            <p class="print-credit-text">[System Powered by TOURMAKER] 본 스마트 가이드북은 <strong>남평초등학교</strong>의 기획과 <strong>투어메이커</strong>의 트래블 테크 기술 제휴로 제작되었습니다.</p>
+        </div>
+        </div>
+
+        <div class="print-page print-page-2">
+            <div class="print-header-top">
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHfgIX70O5k6Anuo0UgALIdaG9jSga9auHu3uyz0uEirylGPAJnjN_qQbvEGMUvPqUQf_g9FMNUHRxlDcUBf4vZ3Mpy4TnA9WxbmzWYK11gt2zuy_Irl4wctNFjcjLyPo0GPXV792o_J7L9guRMuDfeC1gy7USwywjYbECZgzcsHybuGRRAXAnO1eNmP8/s320/logo.png" alt="Tourmaker">
+                <div class="print-doc-no">문서번호: TM-261019-DANANG · 2/2</div>
+            </div>
+            <div class="print-title">여행자 준비물 &amp; 스마트 가이드북</div>
+            <p class="print-subtitle">※ 다낭·호이안 일정에 맞춰 출발 전에 체크하고, QR로 스마트 가이드북을 열어 주세요.</p>
+            <div class="print-overview">
+                <div><span class="label">일정</span> 2026.10.19(월) ~ 10.23(금)</div>
+                <div><span class="label">인원</span> 14명 (학생 10 + 인솔교사 4)</div>
+                <div><span class="label">항공</span> 대한항공 KE459 / KE460 · ICN T2</div>
+                <div><span class="label">호텔</span> 무엉탄럭셔리</div>
+            </div>
+            <div class="print-checklist">
+                <h2>□ 남평초등학교 다낭·호이안 출발 전 준비물</h2>
+                <div class="print-checklist-grid">
+                    <div class="print-check-item"><span class="print-check-box"></span>여권 원본 (귀국일 기준 유효기간 6개월 이상)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>여권 사본 2부 (가방·객실 분리 보관)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>사전입국신고(PAI) QR 캡처·PDF (도착 72시간 전~)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>개인 용돈 (달러 또는 동 환전)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>편한 걷기 신발 (바나산·호이안 도보)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>10월 우기 대비 접이식 우산·가벼운 우비</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>여름옷 + 얇은 긴팔(에어컨·차량용)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>수영복·수건 (3일차 호텔 수영장 물놀이)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>자외선 차단제·모자 (미케비치·바나산)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>모기기피제 (바구니배·호이안 야외)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>상비약·복용약·멀미약·지사제·방수밴드</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>세면도구 · 개인 위생용품</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>멀티 어댑터 (베트남 220V · A/C형)</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>보조배터리(기내 휴대) · 충전기 · 케이블</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>해외 로밍/eSIM · 카카오톡 비상연락 확인</div>
+                    <div class="print-check-item"><span class="print-check-box"></span>인천 T2 · 출발 3시간 전 집결 (15:20)</div>
+                </div>
+            </div>
+            <ul class="print-note-list">
+                <li>한국인은 45일 무비자(면제)이며, <strong>PAI는 별도 필수</strong>입니다. 다낭 도착 72시간 전인 <strong>10월 16일(금) 밤부터</strong> <strong>prearrival.immigration.gov.vn</strong>에서 무료 작성하세요.</li>
+                <li>베트남은 한국보다 <strong>2시간 느립니다</strong> (현지 UTC+7). 약 복용·기상 시간에 참고하세요.</li>
+                <li>10월 다낭·호이안은 우기입니다. 맑다가도 스콜이 잦으니 <strong>우산·우비</strong>를 가방에 넣어 두세요.</li>
+                <li>전압은 한국과 같은 220V입니다. 콘센트는 A/C형이라 한국 C형은 대체로 맞지만, A형 대비 <strong>멀티 어댑터</strong>를 챙기세요.</li>
+                <li>3일차 오전 <strong>호텔 수영장 물놀이</strong>가 있어 수영복·수건을 준비해 주세요. 바나산·호이안은 도보가 많으니 <strong>미끄럼 방지 걷기 신발</strong>을 권장합니다.</li>
+                <li>출국일 인천공항은 <strong>제2터미널</strong>입니다. 대한항공 KE459 18:20 출발이므로 <strong>15:20까지</strong> 수속 카운터 앞에 모여 주세요.</li>
+            </ul>
+            <div class="print-qr-box">
+                <img src="assets/images/guidebook-qr.png" alt="스마트 가이드북 QR">
+                <div class="qr-copy">
+                    <strong>스마트 가이드북 바로가기</strong>
+                    QR코드를 스캔하시면 실시간 날씨, 세부 일정, 탐방 동선, 준비물 체크리스트를 스마트폰에서 확인하실 수 있습니다.
+                    <div class="qr-url">https://indadady.github.io/261019_Danang/</div>
+                </div>
+            </div>
+            <div class="print-contacts">
+                <span><span class="pc-role">담당</span> 이재명 010-9443-7881</span>
+                <span><span class="pc-role">현장</span> 조혁 010-4249-4026</span>
+                <span><span class="pc-role">현지가이드</span> 가이드 미정</span>
+                <span><span class="pc-role">주다낭총영사관</span> +84-23-6356-6100</span>
+                <span><span class="pc-role">영사긴급</span> +84-93-112-0404</span>
+            </div>
+            <div class="print-credit">
+                <p class="print-credit-text">[System Powered by TOURMAKER] 본 스마트 가이드북은 <strong>남평초등학교</strong>의 기획과 <strong>투어메이커</strong>의 트래블 테크 기술 제휴로 제작되었습니다.</p>
+            </div>
         </div>
     </div>
     <!-- END Print-Only Area -->
