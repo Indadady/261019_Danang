@@ -1782,28 +1782,32 @@
         function estimateSeconds(meters, mode){
             if (!meters || meters <= 0) return 0;
             if (mode === 'flight') return meters / (800 / 3.6);
-            return meters / (35 / 3.6);
+            return meters / (25 / 3.6);
+        }
+        function groupTravelSeconds(seconds, mode){
+            if (!seconds || seconds <= 0) return 0;
+            if (mode === 'flight') return seconds;
+            return Math.max(12 * 60, seconds * 1.4 + 8 * 60);
         }
         function formatApproxTime(seconds){
             if (!seconds || seconds <= 0) return '';
-            const min = Math.max(1, Math.round(seconds / 60));
-            if (min < 8) return '약 ' + min + '분';
-            if (min < 55) return '약 ' + Math.max(5, Math.round(min / 5) * 5) + '분';
-            const rounded = Math.round(min / 10) * 10;
+            const min = Math.max(1, Math.ceil(seconds / 60));
+            if (min < 55) return '약 ' + Math.max(15, Math.ceil(min / 5) * 5) + '분';
+            const rounded = Math.ceil(min / 10) * 10;
             const h = Math.floor(rounded / 60);
             const m = rounded % 60;
             if (!h) return '약 ' + m + '분';
             if (!m) return '약 ' + h + '시간';
             return '약 ' + h + '시간 ' + m + '분';
         }
-        function setMapDistance(fromKey, toKey, meters, seconds){
+        function setMapDistance(fromKey, toKey, meters, seconds, mode){
             const box = document.getElementById('map-distance');
             const legEl = document.getElementById('map-distance-leg');
             const timeEl = document.getElementById('map-distance-time');
             const kmEl = document.getElementById('map-distance-km');
             if (!box || !legEl || !timeEl || !kmEl) return;
             const kmLabel = formatApproxKm(meters);
-            const timeLabel = formatApproxTime(seconds);
+            const timeLabel = formatApproxTime(groupTravelSeconds(seconds, mode));
             if (!fromKey || (!kmLabel && !timeLabel)) {
                 box.classList.add('hidden');
                 return;
@@ -2060,7 +2064,7 @@
                 const seconds = packed[i].seconds || estimateSeconds(meters, leg.mode);
                 const dashPattern = leg.mode === 'flight' ? '16, 12' : null;
                 setMapStatus(leg.label || (spots[leg.from].s + ' → ' + spots[leg.to].s));
-                setMapDistance(leg.from, leg.to, meters, seconds);
+                setMapDistance(leg.from, leg.to, meters, seconds, leg.mode);
                 mover.setIcon(moverIcon(leg.mode, spots[leg.from].c, spots[leg.to].c));
 
                 if (leg.mode === 'flight') {
